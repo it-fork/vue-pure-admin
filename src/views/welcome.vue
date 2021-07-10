@@ -26,8 +26,8 @@
   </div>
 </template>
 
-<script lang='ts'>
-import Flop from "/@/components/Flop";
+<script lang="ts">
+import Flop from "/@/components/ReFlop";
 import { ref, computed, onMounted, nextTick } from "vue";
 import { deviceDetection } from "/@/utils/deviceDetection";
 import { useEventListener, tryOnUnmounted, useTimeoutFn } from "@vueuse/core";
@@ -83,7 +83,7 @@ export default {
             bottom: "10%"
           },
           xAxis: {
-            data: info.map(function(item) {
+            data: info.map(function (item) {
               return item[0];
             })
           },
@@ -143,7 +143,7 @@ export default {
           series: {
             name: "上海 空气质量指数",
             type: "line",
-            data: info.map(function(item) {
+            data: info.map(function (item) {
               return item[1];
             }),
             markLine: {

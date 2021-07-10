@@ -20,7 +20,12 @@
       </app-link>
     </template>
 
-    <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
+    <el-submenu
+      v-else
+      ref="subMenu"
+      :index="resolvePath(item.path)"
+      popper-append-to-body
+    >
       <template #title>
         <i :class="item.meta.icon"></i>
         <span>{{ $t(item.meta.title) }}</span>
@@ -42,6 +47,8 @@ import path from "path";
 import AppLink from "./Link.vue";
 import { defineComponent, PropType, ref } from "vue";
 import { RouteRecordRaw } from "vue-router";
+import { isUrl } from "/@/utils/is.ts";
+
 export default defineComponent({
   name: "SidebarItem",
   components: { AppLink },
@@ -81,15 +88,27 @@ export default defineComponent({
       }
 
       if (showingChildren.length === 0) {
+        // @ts-ignore
         onlyOneChild.value = { ...parent, path: "", noShowingChildren: true };
         return true;
       }
       return false;
     }
 
-    const resolvePath = (routePath: string) => {
+    // const resolvePath = (routePath: string) => {
+    //   return path.resolve(props.basePath, routePath);
+    // };
+
+    function resolvePath(routePath) {
+      if (isUrl(routePath)) {
+        return routePath;
+      }
+      if (isUrl(this.basePath)) {
+        return props.basePath;
+      }
+      // @ts-ignore
       return path.resolve(props.basePath, routePath);
-    };
+    }
 
     return { hasOneShowingChild, resolvePath, onlyOneChild };
   }

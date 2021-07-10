@@ -20,7 +20,11 @@
       >
         <img :src="langs ? ch : en" />
       </div>
-      <i class="el-icon-setting hsset" :title="$t('message.hssystemSet')" @click="onPanel"></i>
+      <i
+        class="el-icon-setting hsset"
+        :title="$t('message.hssystemSet')"
+        @click="onPanel"
+      ></i>
       <!-- 退出登陆 -->
       <el-dropdown trigger="click">
         <span class="el-dropdown-link">
@@ -29,10 +33,9 @@
         </span>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item
-              icon="el-icon-switch-button"
-              @click="logout"
-            >{{ $t("message.hsLoginOut") }}</el-dropdown-item>
+            <el-dropdown-item icon="el-icon-switch-button" @click="logout">{{
+              $t("message.hsLoginOut")
+            }}</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -42,12 +45,11 @@
 
 <script lang="ts">
 import { ref, defineComponent, onMounted, unref, watch } from "vue";
-import Breadcrumb from "/@/components/BreadCrumb";
-import Hamburger from "/@/components/HamBurger";
+import Breadcrumb from "/@/components/ReBreadCrumb";
+import Hamburger from "/@/components/ReHamBurger";
 import screenfull from "../components/screenfull/index.vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAppStoreHook } from "/@/store/modules/app";
-import { mapGetters } from "pinia";
 import { storageSession } from "/@/utils/storage";
 import ch from "/@/assets/ch.png";
 import en from "/@/assets/en.png";
@@ -92,7 +94,7 @@ export default defineComponent({
 
     watch(
       () => langs.value,
-      val => {
+      () => {
         //@ts-ignore
         document.title = t(unref(route.meta.title)); // 动态title
       }
@@ -220,7 +222,7 @@ export default defineComponent({
   padding: 0 10px;
 }
 .el-dropdown-menu {
-  padding: 0;
+  padding: 6px 0;
 }
 .el-dropdown-menu__item:focus,
 .el-dropdown-menu__item:not(.is-disabled):hover {

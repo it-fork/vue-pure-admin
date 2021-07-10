@@ -1,4 +1,4 @@
-import { createApp } from "vue";
+import { createApp, Directive } from "vue";
 import App from "./App.vue";
 import router from "./router";
 import { setupStore } from "/@/store";
@@ -19,7 +19,35 @@ import { setConfig, getConfig } from "./config";
 import axios from "axios";
 
 const app = createApp(App);
+
 app.config.globalProperties.$config = getConfig();
+
+// 响应式storage
+import Storage from "responsive-storage";
+
+app.use(Storage, {
+  // 默认显示首页tag
+  routesInStorage: {
+    type: String,
+    default: Storage.getData(undefined, "routesInStorage") ?? [
+      {
+        path: "/welcome",
+        meta: {
+          title: "message.hshome",
+          icon: "el-icon-s-home",
+          showLink: true,
+          savedPosition: false
+        }
+      }
+    ]
+  }
+});
+
+// 自定义指令
+import * as directives from "/@/directives";
+Object.keys(directives).forEach(key => {
+  app.directive(key, (directives as { [key: string]: Directive })[key]);
+});
 
 // 获取项目动态全局配置
 export const getServerConfig = async (): Promise<any> => {
@@ -29,7 +57,7 @@ export const getServerConfig = async (): Promise<any> => {
     url:
       process.env.NODE_ENV === "production"
         ? "/manages/serverConfig.json"
-        : "/serverConfig.json",
+        : "/serverConfig.json"
   })
     .then(({ data: config }) => {
       let $config = app.config.globalProperties.$config;

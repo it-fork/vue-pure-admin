@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar-logo-container" :class="{'collapse':collapse}">
+  <div class="sidebar-logo-container" :class="{ collapse: collapse }">
     <transition name="sidebarLogoFade">
       <router-link
         v-if="collapse"
@@ -11,7 +11,13 @@
         <i class="fa fa-optin-monster"></i>
         <h1 class="sidebar-title">{{ settings.title }}</h1>
       </router-link>
-      <router-link v-else key="expand" :title="settings.title" class="sidebar-logo-link" to="/">
+      <router-link
+        v-else
+        key="expand"
+        :title="settings.title"
+        class="sidebar-logo-link"
+        to="/"
+      >
         <i class="fa fa-optin-monster"></i>
         <h1 class="sidebar-title">{{ settings.title }}</h1>
       </router-link>
@@ -42,7 +48,6 @@ export default defineComponent({
   position: relative;
   width: 100%;
   height: 50px;
-  background: #2b2f3a;
   text-align: center;
   overflow: hidden;
 
@@ -52,15 +57,15 @@ export default defineComponent({
     .sidebar-title {
       display: inline-block;
       margin: 0;
-      color: #fff;
+      color: #1890ff;
       font-weight: 600;
-      line-height: 50px;
       font-size: 20px;
+      margin-top: 16px;
       font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
     }
 
     .fa-optin-monster {
-      font-size: 38px;
+      font-size: 30px;
       color: #1890ff;
       margin-top: 5px;
     }

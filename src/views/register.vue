@@ -1,18 +1,16 @@
 <template>
   <div class="register">
-    <info :ruleForm="contextInfo" @on-behavior="onRegist" @refreshVerify="refreshVerify" />
+    <info
+      :ruleForm="contextInfo"
+      @on-behavior="onRegist"
+      @refreshVerify="refreshVerify"
+    />
   </div>
 </template>
 
 <script lang="ts">
-import {
-  ref,
-  reactive,
-  onMounted,
-  onBeforeMount,
-  getCurrentInstance
-} from "vue";
-import info, { ContextProps } from "../components/info/index.vue";
+import { reactive, onBeforeMount } from "vue";
+import info, { ContextProps } from "../components/ReInfo/index.vue";
 import { getRegist, getVerify } from "/@/api/user";
 import { useRouter } from "vue-router";
 import { warnMessage, successMessage } from "/@/utils/message";
