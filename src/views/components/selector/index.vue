@@ -1,11 +1,29 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import Selector from "/@/components/ReSelector";
+
+let selectRange = ref<string>("");
+let dataLists = ref([
+  {
+    title: "基本使用",
+    echo: [],
+    disabled: false
+  },
+  {
+    title: "回显模式",
+    echo: [2, 7],
+    disabled: true
+  }
+]);
+
+const selectedVal = ({ left, right }): void => {
+  selectRange.value = `${left}-${right}`;
+};
+</script>
+
 <template>
   <div>
-    <el-card
-      class="box-card"
-      style="margin: 10px"
-      v-for="(item, key) in dataLists"
-      :key="key"
-    >
+    <el-card class="box-card" v-for="(item, key) in dataLists" :key="key">
       <template #header>
         <div class="card-header">
           <span>{{ item.title }}</span>
@@ -22,36 +40,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { ref } from "vue";
-import Selector from "/@/components/ReSelector";
-
-export default {
-  components: { Selector },
-  setup() {
-    let selectRange = ref(null);
-    let dataLists = ref([
-      {
-        title: "基本使用",
-        echo: [],
-        disabled: false
-      },
-      {
-        title: "回显模式",
-        echo: [2, 7],
-        disabled: true
-      }
-    ]);
-
-    const selectedVal = ({ left, right }) => {
-      selectRange.value = `${left}-${right}`;
-    };
-
-    return {
-      selectedVal,
-      selectRange,
-      dataLists
-    };
-  }
-};
-</script>
+<style scoped>
+.el-card {
+  margin-bottom: 10px;
+}
+</style>

@@ -7,6 +7,7 @@ import enVxeTable from "vxe-table/lib/locale/lang/en-US";
 import enLocale from "element-plus/lib/locale/lang/en";
 import zhLocale from "element-plus/lib/locale/lang/zh-cn";
 
+// 导航菜单配置
 export const menusConfig = {
   zh: {
     message: {
@@ -99,7 +100,13 @@ export const buttonConfig = {
       hsexpendAll: "全部展开",
       hscollapseAll: "全部折叠",
       hssystemSet: "系统设置",
-      hsdelete: "删除"
+      hsdelete: "删除",
+      hsreload: "重新加载",
+      hscloseCurrentTab: "关闭当前标签页",
+      hscloseLeftTabs: "关闭左侧标签页",
+      hscloseRightTabs: "关闭右侧标签页",
+      hscloseOtherTabs: "关闭其他标签页",
+      hscloseAllTabs: "关闭全部标签页"
     }
   },
   en: {
@@ -117,7 +124,13 @@ export const buttonConfig = {
       hsexpendAll: "Expand All",
       hscollapseAll: "Collapse All",
       hssystemSet: "System Set",
-      hsdelete: "Delete"
+      hsdelete: "Delete",
+      hsreload: "Reload",
+      hscloseCurrentTab: "Close CurrentTab",
+      hscloseLeftTabs: "Close LeftTabs",
+      hscloseRightTabs: "Close RightTabs",
+      hscloseOtherTabs: "Close OtherTabs",
+      hscloseAllTabs: "Close AllTabs"
     }
   }
 };

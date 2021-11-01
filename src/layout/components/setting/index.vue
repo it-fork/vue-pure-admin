@@ -1,33 +1,236 @@
+<script setup lang="ts">
+import { split } from "lodash-es";
+import panel from "../panel/index.vue";
+import { useRouter } from "vue-router";
+import { emitter } from "/@/utils/mitt";
+import { templateRef } from "@vueuse/core";
+import { debounce } from "/@/utils/debounce";
+import { useAppStoreHook } from "/@/store/modules/app";
+import { storageLocal, storageSession } from "/@/utils/storage";
+import {
+  reactive,
+  ref,
+  unref,
+  watch,
+  useCssModule,
+  getCurrentInstance
+} from "vue";
+
+const router = useRouter();
+const { isSelect } = useCssModule();
+
+const instance =
+  getCurrentInstance().appContext.app.config.globalProperties.$storage;
+
+// 默认灵动模式
+const markValue = ref(storageLocal.getItem("showModel") || "smart");
+
+const logoVal = ref(storageLocal.getItem("logoVal") || "1");
+
+const localOperate = (key: string, value?: any, model?: string): any => {
+  model && model === "set"
+    ? storageLocal.setItem(key, value)
+    : storageLocal.getItem(key);
+};
+
+const settings = reactive({
+  greyVal: storageLocal.getItem("greyVal"),
+  weekVal: storageLocal.getItem("weekVal"),
+  tagsVal: storageLocal.getItem("tagsVal")
+});
+
+settings.greyVal === null
+  ? localOperate("greyVal", false, "set")
+  : document.querySelector("html")?.setAttribute("class", "html-grey");
+
+settings.weekVal === null
+  ? localOperate("weekVal", false, "set")
+  : document.querySelector("html")?.setAttribute("class", "html-weakness");
+
+if (settings.tagsVal === null) {
+  localOperate("tagsVal", false, "set");
+  settings.tagsVal = false;
+}
+window.document.body.setAttribute("data-show-tag", settings.tagsVal);
+
+function toggleClass(flag: boolean, clsName: string, target?: HTMLElement) {
+  const targetEl = target || document.body;
+  let { className } = targetEl;
+  className = className.replace(clsName, "");
+  targetEl.className = flag ? `${className} ${clsName} ` : className;
+}
+
+// 灰色模式设置
+const greyChange = ({ value }): void => {
+  toggleClass(settings.greyVal, "html-grey", document.querySelector("html"));
+  value
+    ? localOperate("greyVal", true, "set")
+    : localOperate("greyVal", false, "set");
+};
+
+// 色弱模式设置
+const weekChange = ({ value }): void => {
+  toggleClass(
+    settings.weekVal,
+    "html-weakness",
+    document.querySelector("html")
+  );
+  value
+    ? localOperate("weekVal", true, "set")
+    : localOperate("weekVal", false, "set");
+};
+
+const tagsChange = () => {
+  let showVal = settings.tagsVal;
+  showVal
+    ? storageLocal.setItem("tagsVal", true)
+    : storageLocal.setItem("tagsVal", false);
+  emitter.emit("tagViewsChange", showVal);
+};
+
+function onReset() {
+  storageLocal.clear();
+  storageSession.clear();
+  router.push("/login");
+}
+
+function onChange({ label }) {
+  storageLocal.setItem("showModel", label);
+  emitter.emit("tagViewsShowModel", label);
+}
+
+const verticalDarkDom = templateRef<HTMLElement | null>(
+  "verticalDarkDom",
+  null
+);
+const verticalLightDom = templateRef<HTMLElement | null>(
+  "verticalLightDom",
+  null
+);
+const horizontalDarkDom = templateRef<HTMLElement | null>(
+  "horizontalDarkDom",
+  null
+);
+const horizontalLightDom = templateRef<HTMLElement | null>(
+  "horizontalLightDom",
+  null
+);
+
+let dataTheme =
+  ref(storageLocal.getItem("responsive-layout")) ||
+  ref({
+    layout: "horizontal-dark"
+  });
+
+if (unref(dataTheme)) {
+  // 设置主题
+  let theme = split(unref(dataTheme).layout, "-")[1];
+  window.document.body.setAttribute("data-theme", theme);
+  // 设置导航模式
+  let layout = split(unref(dataTheme).layout, "-")[0];
+  window.document.body.setAttribute("data-layout", layout);
+}
+
+// 侧边栏Logo
+function logoChange() {
+  unref(logoVal) === "1"
+    ? storageLocal.setItem("logoVal", "1")
+    : storageLocal.setItem("logoVal", "-1");
+  emitter.emit("logoChange", unref(logoVal));
+}
+
+function setFalse(Doms): any {
+  Doms.forEach(v => {
+    toggleClass(false, isSelect, unref(v));
+  });
+}
+
+watch(instance, ({ layout }) => {
+  switch (layout["layout"]) {
+    case "vertical-dark":
+      toggleClass(true, isSelect, unref(verticalDarkDom));
+      debounce(
+        setFalse([verticalLightDom, horizontalDarkDom, horizontalLightDom]),
+        50
+      );
+      break;
+    case "vertical-light":
+      toggleClass(true, isSelect, unref(verticalLightDom));
+      debounce(
+        setFalse([verticalDarkDom, horizontalDarkDom, horizontalLightDom]),
+        50
+      );
+      break;
+    case "horizontal-dark":
+      toggleClass(true, isSelect, unref(horizontalDarkDom));
+      debounce(
+        setFalse([verticalDarkDom, verticalLightDom, horizontalLightDom]),
+        50
+      );
+      break;
+    case "horizontal-light":
+      toggleClass(true, isSelect, unref(horizontalLightDom));
+      debounce(
+        setFalse([verticalDarkDom, verticalLightDom, horizontalDarkDom]),
+        50
+      );
+      break;
+  }
+});
+
+function setTheme(layout: string, theme: string) {
+  dataTheme.value.layout = `${layout}-${theme}`;
+  window.document.body.setAttribute("data-layout", layout);
+  window.document.body.setAttribute("data-theme", theme);
+  instance.layout = { layout: `${layout}-${theme}` };
+  useAppStoreHook().setLayout(layout);
+}
+</script>
+
 <template>
   <panel>
     <el-divider>主题风格</el-divider>
     <ul class="theme-stley">
-      <el-tooltip
-        class="item"
-        effect="dark"
-        content="暗色主题"
-        placement="bottom"
-      >
+      <el-tooltip class="item" content="左侧菜单暗色模式" placement="bottom">
         <li
-          :class="dataTheme === 'dark' ? 'is-select' : ''"
-          ref="firstTheme"
-          @click="onDark"
+          :class="dataTheme.layout === 'vertical-dark' ? $style.isSelect : ''"
+          ref="verticalDarkDom"
+          @click="setTheme('vertical', 'dark')"
         >
           <div></div>
           <div></div>
         </li>
       </el-tooltip>
 
-      <el-tooltip
-        class="item"
-        effect="dark"
-        content="亮色主题"
-        placement="bottom"
-      >
+      <el-tooltip class="item" content="左侧菜单亮色模式" placement="bottom">
         <li
-          :class="dataTheme === 'light' ? 'is-select' : ''"
-          ref="secondTheme"
-          @click="onLight"
+          :class="dataTheme.layout === 'vertical-light' ? $style.isSelect : ''"
+          ref="verticalLightDom"
+          @click="setTheme('vertical', 'light')"
+        >
+          <div></div>
+          <div></div>
+        </li>
+      </el-tooltip>
+
+      <el-tooltip class="item" content="顶部菜单暗色模式" placement="bottom">
+        <li
+          :class="dataTheme.layout === 'horizontal-dark' ? $style.isSelect : ''"
+          ref="horizontalDarkDom"
+          @click="setTheme('horizontal', 'dark')"
+        >
+          <div></div>
+          <div></div>
+        </li>
+      </el-tooltip>
+
+      <el-tooltip class="item" content="顶部菜单亮色模式" placement="bottom">
+        <li
+          :class="
+            dataTheme.layout === 'horizontal-light' ? $style.isSelect : ''
+          "
+          ref="horizontalLightDom"
+          @click="setTheme('horizontal', 'light')"
         >
           <div></div>
           <div></div>
@@ -40,7 +243,7 @@
       <li>
         <span>灰色模式</span>
         <vxe-switch
-          v-model="greyVal"
+          v-model="settings.greyVal"
           open-label="开"
           close-label="关"
           @change="greyChange"
@@ -49,7 +252,7 @@
       <li>
         <span>色弱模式</span>
         <vxe-switch
-          v-model="weekVal"
+          v-model="settings.weekVal"
           open-label="开"
           close-label="关"
           @change="weekChange"
@@ -58,7 +261,7 @@
       <li>
         <span>隐藏标签页</span>
         <vxe-switch
-          v-model="tagsVal"
+          v-model="settings.tagsVal"
           open-label="开"
           close-label="关"
           @change="tagsChange"
@@ -96,150 +299,16 @@
   </panel>
 </template>
 
-<script lang="ts">
-import panel from "../panel/index.vue";
-import { reactive, toRefs, ref, unref } from "vue";
-import { storageLocal, storageSession } from "/@/utils/storage";
-import { emitter } from "/@/utils/mitt";
-import { useRouter } from "vue-router";
-import { templateRef } from "@vueuse/core";
-let isSelect = "is-select";
-
-export default {
-  name: "setting",
-  components: { panel },
-  setup() {
-    const router = useRouter();
-
-    // 默认灵动模式
-    const markValue = ref(storageLocal.getItem("showModel") || "smart");
-
-    const logoVal = ref(storageLocal.getItem("logoVal") || "1");
-
-    const localOperate = (key: string, value?: any, model?: string): any => {
-      model && model === "set"
-        ? storageLocal.setItem(key, value)
-        : storageLocal.getItem(key);
-    };
-
-    const settings = reactive({
-      greyVal: storageLocal.getItem("greyVal"),
-      weekVal: storageLocal.getItem("weekVal"),
-      tagsVal: storageLocal.getItem("tagsVal")
-    });
-
-    settings.greyVal === null
-      ? localOperate("greyVal", false, "set")
-      : document.querySelector("html")?.setAttribute("class", "html-grey");
-
-    settings.weekVal === null
-      ? localOperate("weekVal", false, "set")
-      : document.querySelector("html")?.setAttribute("class", "html-weakness");
-
-    function toggleClass(flag: boolean, clsName: string, target?: HTMLElement) {
-      const targetEl = target || document.body;
-      let { className } = targetEl;
-      className = className.replace(clsName, "");
-      targetEl.className = flag ? `${className} ${clsName} ` : className;
-    }
-
-    // 灰色模式设置
-    const greyChange = ({ value }): void => {
-      toggleClass(
-        settings.greyVal,
-        "html-grey",
-        document.querySelector("html")
-      );
-      value
-        ? localOperate("greyVal", true, "set")
-        : localOperate("greyVal", false, "set");
-    };
-
-    // 色弱模式设置
-    const weekChange = ({ value }): void => {
-      toggleClass(
-        settings.weekVal,
-        "html-weakness",
-        document.querySelector("html")
-      );
-      value
-        ? localOperate("weekVal", true, "set")
-        : localOperate("weekVal", false, "set");
-    };
-
-    const tagsChange = () => {
-      let showVal = settings.tagsVal;
-      showVal
-        ? storageLocal.setItem("tagsVal", true)
-        : storageLocal.setItem("tagsVal", false);
-      emitter.emit("tagViewsChange", showVal);
-    };
-
-    function onReset() {
-      storageLocal.clear();
-      storageSession.clear();
-      router.push("/login");
-    }
-
-    function onChange({ label }) {
-      storageLocal.setItem("showModel", label);
-      emitter.emit("tagViewsShowModel", label);
-    }
-
-    const firstTheme = templateRef<HTMLElement | null>("firstTheme", null);
-    const secondTheme = templateRef<HTMLElement | null>("secondTheme", null);
-
-    const dataTheme = ref(storageLocal.getItem("data-theme") || "dark");
-    if (dataTheme.value) {
-      storageLocal.setItem("data-theme", unref(dataTheme));
-      window.document.body.setAttribute("data-theme", unref(dataTheme));
-    }
-
-    // dark主题
-    function onDark() {
-      storageLocal.setItem("data-theme", "dark");
-      window.document.body.setAttribute("data-theme", "dark");
-      toggleClass(true, isSelect, unref(firstTheme));
-      toggleClass(false, isSelect, unref(secondTheme));
-    }
-
-    // light主题
-    function onLight() {
-      storageLocal.setItem("data-theme", "light");
-      window.document.body.setAttribute("data-theme", "light");
-      toggleClass(false, isSelect, unref(firstTheme));
-      toggleClass(true, isSelect, unref(secondTheme));
-    }
-
-    function logoChange() {
-      unref(logoVal) === "1"
-        ? storageLocal.setItem("logoVal", "1")
-        : storageLocal.setItem("logoVal", "-1");
-      emitter.emit("logoChange", unref(logoVal));
-    }
-
-    return {
-      ...toRefs(settings),
-      localOperate,
-      greyChange,
-      weekChange,
-      tagsChange,
-      onReset,
-      markValue,
-      onChange,
-      onDark,
-      onLight,
-      dataTheme,
-      logoVal,
-      logoChange
-    };
-  }
-};
-</script>
+<style scoped module>
+.isSelect {
+  border: 2px solid #0960bd;
+}
+</style>
 
 <style lang="scss" scoped>
 .setting {
   width: 100%;
+
   li {
     display: flex;
     justify-content: space-between;
@@ -247,26 +316,31 @@ export default {
     margin: 25px;
   }
 }
+
 :deep(.el-divider__text) {
   font-size: 16px;
   font-weight: 700;
 }
+
 .theme-stley {
   margin-top: 25px;
   width: 100%;
-  height: 60px;
+  height: 180px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-around;
+
   li {
-    width: 30%;
-    height: 100%;
+    margin: 10px;
+    width: 36%;
+    height: 70px;
     background: #f0f2f5;
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    background-color: #f0f2f5;
     border-radius: 4px;
     box-shadow: 0 1px 2.5px 0 rgb(0 0 0 / 18%);
+
     &:nth-child(1) {
       div {
         &:nth-child(1) {
@@ -274,13 +348,14 @@ export default {
           height: 100%;
           background: #1b2a47;
         }
+
         &:nth-child(2) {
           width: 70%;
           height: 30%;
           top: 0;
           right: 0;
-          background-color: #fff;
-          box-shadow: 0 0 1px #888888;
+          background: #fff;
+          box-shadow: 0 0 1px #888;
           position: absolute;
         }
       }
@@ -291,24 +366,44 @@ export default {
         &:nth-child(1) {
           width: 30%;
           height: 100%;
-          box-shadow: 0 0 1px #888888;
-          background-color: #fff;
+          box-shadow: 0 0 1px #888;
+          background: #fff;
           border-radius: 4px 0 0 4px;
         }
+
         &:nth-child(2) {
           width: 70%;
           height: 30%;
           top: 0;
           right: 0;
-          background-color: #fff;
-          box-shadow: 0 0 1px #888888;
+          background: #fff;
+          box-shadow: 0 0 1px #888;
           position: absolute;
         }
       }
     }
+
+    &:nth-child(3) {
+      div {
+        &:nth-child(1) {
+          width: 100%;
+          height: 30%;
+          background: #1b2a47;
+          box-shadow: 0 0 1px #888;
+        }
+      }
+    }
+
+    &:nth-child(4) {
+      div {
+        &:nth-child(1) {
+          width: 100%;
+          height: 30%;
+          background: #fff;
+          box-shadow: 0 0 1px #888;
+        }
+      }
+    }
   }
-}
-.is-select {
-  border: 2px solid #0960bd;
 }
 </style>

@@ -1,24 +1,13 @@
-<template>
-  <div class="map">
-    <Amap />
-  </div>
-</template>
-
-<script lang="ts">
+<script setup lang="ts">
 import { Amap } from "/@/components/ReMap";
-export default {
-  components: {
-    Amap
-  },
-  setup() {
-    return {};
-  }
-};
 </script>
 
+<template>
+  <Amap />
+</template>
+
 <style scoped>
-.map {
-  width: 100%;
-  height: 89vh;
+.main-content {
+  margin: 0;
 }
 </style>

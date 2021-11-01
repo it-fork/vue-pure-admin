@@ -1,243 +1,259 @@
-<template>
-  <div class="welcome">
-    <el-affix>
-      <div class="top-content">
-        <div class="left-mark">
-          <img
-            src="https://avatars.githubusercontent.com/u/44761321?s=400&u=30907819abd29bb3779bc247910873e7c7f7c12f&v=4"
-            title="直达仓库地址"
-            alt
-            @click="openDepot"
-          />
-          <span>{{ greetings }}</span>
-        </div>
-        <Flop v-if="!mobile" />
-      </div>
-    </el-affix>
+<script setup lang="ts">
+import {
+  ReGithub,
+  ReInfinite,
+  RePie,
+  ReLine,
+  ReBar
+} from "/@/components/ReCharts/index";
+import { ref, computed } from "vue";
 
-    <!-- 图表 -->
-    <el-card class="box-card">
-      <el-skeleton style="height: 50vh" :rows="8" :loading="loading" animated>
-        <template #default>
-          <div id="brokenLine"></div>
-        </template>
-      </el-skeleton>
-    </el-card>
-  </div>
-</template>
+const date: Date = new Date();
+let loading = ref<boolean>(true);
 
-<script lang="ts">
-import Flop from "/@/components/ReFlop";
-import { ref, computed, onMounted, nextTick } from "vue";
-import { deviceDetection } from "/@/utils/deviceDetection";
-import { useEventListener, tryOnUnmounted, useTimeoutFn } from "@vueuse/core";
-import { echartsJson } from "/@/api/mock";
-import echarts from "/@/plugins/echarts";
+setTimeout(() => {
+  loading.value = !loading.value;
+}, 800);
 
-let brokenLine: any = null; //折线图实例
-export default {
-  name: "welcome",
-  components: {
-    Flop
-  },
-  setup() {
-    let mobile = ref(deviceDetection());
-    let date: Date = new Date();
-    let loading = ref(true);
-
-    setTimeout(() => {
-      loading.value = !loading.value;
-      nextTick(() => {
-        initbrokenLine();
-      });
-    }, 500);
-
-    let greetings = computed(() => {
-      if (date.getHours() >= 0 && date.getHours() < 12) {
-        return "上午阳光明媚，祝你薪水翻倍🌞！";
-      } else if (date.getHours() >= 12 && date.getHours() < 18) {
-        return "下午小风娇好，愿你青春不老😃！";
-      } else {
-        return "折一根天使羽毛，愿拂去您的疲惫烦恼忧伤🌛！";
-      }
-    });
-
-    function initbrokenLine() {
-      const lineRefDom = document.getElementById("brokenLine");
-      if (!lineRefDom) return;
-      brokenLine = echarts.init(lineRefDom);
-      brokenLine.clear(); //清除旧画布 重新渲染
-
-      echartsJson().then(({ info }) => {
-        brokenLine.setOption({
-          title: {
-            text: "上海 空气质量指数",
-            left: "1%"
-          },
-          tooltip: {
-            trigger: "axis"
-          },
-          grid: {
-            left: "5%",
-            right: "15%",
-            bottom: "10%"
-          },
-          xAxis: {
-            data: info.map(function (item) {
-              return item[0];
-            })
-          },
-          yAxis: {},
-          toolbox: {
-            right: 10,
-            feature: {
-              saveAsImage: {}
-            }
-          },
-          dataZoom: [
-            {
-              startValue: "2014-06-01"
-            },
-            {
-              type: "inside"
-            }
-          ],
-          visualMap: {
-            top: 50,
-            right: 10,
-            pieces: [
-              {
-                gt: 0,
-                lte: 50,
-                color: "#93CE07"
-              },
-              {
-                gt: 50,
-                lte: 100,
-                color: "#FBDB0F"
-              },
-              {
-                gt: 100,
-                lte: 150,
-                color: "#FC7D02"
-              },
-              {
-                gt: 150,
-                lte: 200,
-                color: "#FD0100"
-              },
-              {
-                gt: 200,
-                lte: 300,
-                color: "#AA069F"
-              },
-              {
-                gt: 300,
-                color: "#AC3B2A"
-              }
-            ],
-            outOfRange: {
-              color: "#999"
-            }
-          },
-          series: {
-            name: "上海 空气质量指数",
-            type: "line",
-            data: info.map(function (item) {
-              return item[1];
-            }),
-            markLine: {
-              silent: true,
-              lineStyle: {
-                color: "#333"
-              },
-              data: [
-                {
-                  yAxis: 50
-                },
-                {
-                  yAxis: 100
-                },
-                {
-                  yAxis: 150
-                },
-                {
-                  yAxis: 200
-                },
-                {
-                  yAxis: 300
-                }
-              ]
-            }
-          }
-        });
-      });
-    }
-
-    const openDepot = (): void => {
-      window.open("https://github.com/xiaoxian521/vue-pure-admin");
-    };
-
-    onMounted(() => {
-      nextTick(() => {
-        useEventListener("resize", () => {
-          if (!brokenLine) return;
-          useTimeoutFn(() => {
-            brokenLine.resize();
-          }, 180);
-        });
-      });
-    });
-
-    tryOnUnmounted(() => {
-      if (!brokenLine) return;
-      brokenLine.dispose();
-      brokenLine = null;
-    });
-
-    return {
-      greetings,
-      mobile,
-      loading,
-      openDepot
-    };
+let greetings = computed(() => {
+  if (date.getHours() >= 0 && date.getHours() < 12) {
+    return "上午阳光明媚，祝你薪水翻倍🌞！";
+  } else if (date.getHours() >= 12 && date.getHours() < 18) {
+    return "下午小风娇好，愿你青春不老😃！";
+  } else {
+    return "折一根天使羽毛，愿拂去您的疲惫烦恼忧伤🌛！";
   }
+});
+
+const openDepot = (): void => {
+  window.open("https://github.com/xiaoxian521/vue-pure-admin");
 };
 </script>
 
+<template>
+  <div class="welcome">
+    <el-card class="top-content">
+      <div class="left-mark">
+        <img
+          src="https://avatars.githubusercontent.com/u/44761321?s=400&u=30907819abd29bb3779bc247910873e7c7f7c12f&v=4"
+          title="直达仓库地址"
+          @click="openDepot"
+        />
+        <span>{{ greetings }}</span>
+      </div>
+    </el-card>
+
+    <el-row :gutter="24" style="margin: 20px">
+      <el-col
+        :xs="24"
+        :sm="24"
+        :md="12"
+        :lg="12"
+        :xl="12"
+        style="margin-bottom: 20px"
+        v-motion
+        :initial="{
+          opacity: 0,
+          y: 100
+        }"
+        :enter="{
+          opacity: 1,
+          y: 0,
+          transition: {
+            delay: 200
+          }
+        }"
+      >
+        <el-card>
+          <template #header>
+            <div>
+              <span>GitHub信息</span>
+            </div>
+          </template>
+          <el-skeleton animated :rows="7" :loading="loading">
+            <template #default>
+              <ReGithub />
+            </template>
+          </el-skeleton>
+        </el-card>
+      </el-col>
+
+      <el-col
+        :xs="24"
+        :sm="24"
+        :md="12"
+        :lg="12"
+        :xl="12"
+        style="margin-bottom: 20px"
+        v-motion
+        :initial="{
+          opacity: 0,
+          y: 100
+        }"
+        :enter="{
+          opacity: 1,
+          y: 0,
+          transition: {
+            delay: 200
+          }
+        }"
+      >
+        <el-card>
+          <template #header>
+            <div>
+              <span>GitHub滚动信息</span>
+            </div>
+          </template>
+          <el-skeleton animated :rows="7" :loading="loading">
+            <template #default>
+              <ReInfinite />
+            </template>
+          </el-skeleton>
+        </el-card>
+      </el-col>
+
+      <el-col
+        :xs="24"
+        :sm="24"
+        :md="12"
+        :lg="8"
+        :xl="8"
+        style="margin-bottom: 20px"
+        v-motion
+        :initial="{
+          opacity: 0,
+          y: 100
+        }"
+        :enter="{
+          opacity: 1,
+          y: 0,
+          transition: {
+            delay: 400
+          }
+        }"
+      >
+        <el-card>
+          <template #header>
+            <div>
+              <span>GitHub饼图信息</span>
+            </div>
+          </template>
+          <el-skeleton animated :rows="7" :loading="loading">
+            <template #default>
+              <RePie />
+            </template>
+          </el-skeleton>
+        </el-card>
+      </el-col>
+
+      <el-col
+        :xs="24"
+        :sm="24"
+        :md="12"
+        :lg="8"
+        :xl="8"
+        style="margin-bottom: 20px"
+        v-motion
+        :initial="{
+          opacity: 0,
+          y: 100
+        }"
+        :enter="{
+          opacity: 1,
+          y: 0,
+          transition: {
+            delay: 400
+          }
+        }"
+      >
+        <el-card>
+          <template #header>
+            <div>
+              <span>GitHub折线图信息</span>
+            </div>
+          </template>
+          <el-skeleton animated :rows="7" :loading="loading">
+            <template #default>
+              <ReLine />
+            </template>
+          </el-skeleton>
+        </el-card>
+      </el-col>
+
+      <el-col
+        :xs="24"
+        :sm="24"
+        :md="24"
+        :lg="8"
+        :xl="1"
+        style="margin-bottom: 20px"
+        v-motion
+        :initial="{
+          opacity: 0,
+          y: 100
+        }"
+        :enter="{
+          opacity: 1,
+          y: 0,
+          transition: {
+            delay: 400
+          }
+        }"
+      >
+        <el-card>
+          <template #header>
+            <div>
+              <span>GitHub柱状图信息</span>
+            </div>
+          </template>
+          <el-skeleton animated :rows="7" :loading="loading">
+            <template #default>
+              <ReBar />
+            </template>
+          </el-skeleton>
+        </el-card>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<style module scoped>
+.size {
+  height: 335px;
+}
+</style>
+
 <style lang="scss" scoped>
+.main-content {
+  margin: 0;
+}
+
 .welcome {
-  width: 100%;
   height: 100%;
-  margin-top: 1px;
+
   .top-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 120px;
+    height: 60px;
     background: #fff;
-    padding: 20px;
-    border-bottom: 0.5px solid rgba($color: #ccc, $alpha: 0.3);
+
     .left-mark {
       display: flex;
       align-items: center;
+
       img {
         display: block;
-        width: 72px;
-        height: 72px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
         margin-right: 10px;
         cursor: pointer;
       }
-    }
-  }
-  .box-card {
-    width: 80vw;
-    margin: 10px auto;
-    position: relative;
-    #brokenLine {
-      width: 100%;
-      height: 50vh;
+
+      span {
+        font-size: 14px;
+      }
     }
   }
 }

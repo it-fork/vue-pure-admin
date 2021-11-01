@@ -1,5 +1,31 @@
+<script setup lang="ts">
+import { ref, nextTick, getCurrentInstance } from "vue";
+import Cropper from "/@/components/ReCropper";
+import img from "./picture.jpeg";
+
+const instance = getCurrentInstance();
+let info = ref<object>(null);
+let cropperImg = ref<string>("");
+
+const onCropper = (): void => {
+  nextTick(() => {
+    // @ts-expect-error
+    instance.refs.refCropper.cropper.getCroppedCanvas().toBlob(blob => {
+      let fileReader: FileReader = new FileReader();
+      fileReader.onloadend = (e: ProgressEvent) => {
+        // @ts-ignore
+        cropperImg.value = e.target.result;
+        // @ts-expect-error
+        info.value = instance.refs.refCropper.cropper.getData();
+      };
+      fileReader.readAsDataURL(blob);
+    }, "image/jpeg");
+  });
+};
+</script>
+
 <template>
-  <div style="margin: 10px">
+  <div>
     <div class="cropper-container">
       <Cropper ref="refCropper" :width="'40vw'" :src="img" />
       <img :src="cropperImg" class="croppered" v-if="cropperImg" />
@@ -9,56 +35,17 @@
   </div>
 </template>
 
-<script lang="ts">
-import { ref, onBeforeMount, nextTick, getCurrentInstance } from "vue";
-import Cropper from "/@/components/ReCropper";
-import img from "./picture.jpeg";
-
-export default {
-  components: {
-    Cropper
-  },
-  setup() {
-    let vm: any;
-    let info = ref("");
-    let cropperImg = ref("");
-
-    const onCropper = (): void => {
-      nextTick(() => {
-        vm.refs.refCropper.cropper.getCroppedCanvas().toBlob(blob => {
-          let fileReader: FileReader = new FileReader();
-          fileReader.onloadend = (e: any) => {
-            cropperImg.value = e.target.result;
-            info.value = vm.refs.refCropper.cropper.getData();
-          };
-          fileReader.readAsDataURL(blob);
-        }, "image/jpeg");
-      });
-    };
-
-    onBeforeMount(() => {
-      vm = getCurrentInstance();
-    });
-
-    return {
-      img,
-      info,
-      cropperImg,
-      onCropper
-    };
-  }
-};
-</script>
-
 <style scoped>
 .cropper-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .el-button {
   margin-top: 10px;
 }
+
 .croppered {
   display: block;
   width: 45%;

@@ -1,4 +1,5 @@
-import { storageLocal } from "../../utils/storage";
+import { storageLocal } from "/@/utils/storage";
+import { deviceDetection } from "/@/utils/deviceDetection";
 import { defineStore } from "pinia";
 import { store } from "/@/store";
 
@@ -7,6 +8,7 @@ interface AppState {
     opened: boolean;
     withoutAnimation: boolean;
   };
+  layout: string;
   device: string;
 }
 
@@ -19,7 +21,10 @@ export const useAppStore = defineStore({
         : true,
       withoutAnimation: false
     },
-    device: "desktop"
+    layout:
+      storageLocal.getItem("responsive-layout")?.layout.match(/(.*)-/)[1] ??
+      "vertical",
+    device: deviceDetection() ? "mobile" : "desktop"
   }),
   getters: {
     getSidebarStatus() {
@@ -55,6 +60,9 @@ export const useAppStore = defineStore({
     },
     toggleDevice(device) {
       this.TOGGLE_DEVICE(device);
+    },
+    setLayout(layout) {
+      this.layout = layout;
     }
   }
 });

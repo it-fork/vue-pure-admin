@@ -1,3 +1,20 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { onClickOutside } from "@vueuse/core";
+import { emitter } from "/@/utils/mitt";
+
+let show = ref<Boolean>(false);
+const target = ref(null);
+onClickOutside(target, event => {
+  if (event.clientX > target.value.offsetLeft) return;
+  show.value = false;
+});
+
+emitter.on("openPanel", () => {
+  show.value = true;
+});
+</script>
+
 <template>
   <div :class="{ show: show }" class="right-panel-container">
     <div class="right-panel-background" />
@@ -13,47 +30,6 @@
     </div>
   </div>
 </template>
-
-<script lang="ts">
-import { ref } from "vue";
-import { useEventListener, onClickOutside } from "@vueuse/core";
-import { emitter } from "/@/utils/mitt";
-
-export default {
-  name: "panel",
-  setup() {
-    let show = ref(false);
-
-    const target = ref(null);
-
-    onClickOutside(target, () => {
-      show.value = false;
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars,no-unused-vars
-    const addEventClick = (): void => {
-      useEventListener("click", closeSidebar);
-    };
-
-    const closeSidebar = (evt: any): void => {
-      const parent = evt.target.closest(".right-panel");
-      if (!parent) {
-        show.value = false;
-        window.removeEventListener("click", closeSidebar);
-      }
-    };
-
-    emitter.on("openPanel", () => {
-      show.value = true;
-    });
-
-    return {
-      show,
-      target
-    };
-  }
-};
-</script>
 
 <style>
 .showright-panel {
@@ -81,7 +57,7 @@ export default {
   position: fixed;
   top: 0;
   right: 0;
-  box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.05);
   transition: all 0.25s cubic-bezier(0.7, 0.3, 0.1, 1);
   transform: translate(100%);
   background: #fff;
@@ -118,6 +94,7 @@ export default {
   line-height: 48px;
   top: 45%;
   background: rgb(24, 144, 255);
+
   i {
     font-size: 24px;
     line-height: 48px;
@@ -139,9 +116,11 @@ export default {
   align-items: center;
   top: 15px;
   margin-left: 10px;
+
   i {
     font-size: 20px;
     margin-right: 20px;
+
     &:hover {
       cursor: pointer;
       color: red;

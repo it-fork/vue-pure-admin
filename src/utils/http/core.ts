@@ -41,12 +41,6 @@ class EnclosureHttp {
   // 记录当前这一次cancelToken的key
   private currentCancelTokenKey = "";
 
-  private beforeRequestCallback: EnclosureHttpRequestConfig["beforeRequestCallback"] =
-    undefined;
-
-  private beforeResponseCallback: EnclosureHttpRequestConfig["beforeResponseCallback"] =
-    undefined;
-
   public get cancelTokenList(): Array<cancelTokenType> {
     return this.sourceTokenList;
   }
@@ -126,9 +120,8 @@ class EnclosureHttp {
         this.cancelRepeatRequest();
         this.currentCancelTokenKey = cancelKey;
         // 优先判断post/get等方法是否传入回掉，否则执行初始化设置等回掉
-        if (typeof this.beforeRequestCallback === "function") {
-          this.beforeRequestCallback($config);
-          this.beforeRequestCallback = undefined;
+        if (typeof config.beforeRequestCallback === "function") {
+          config.beforeRequestCallback($config);
           return $config;
         }
         if (EnclosureHttp.initConfig.beforeRequestCallback) {
@@ -152,27 +145,28 @@ class EnclosureHttp {
   }
 
   /**
-   * @description 拦截相应
+   * @description 拦截响应
    * @returns void 0
    */
   private httpInterceptorsResponse(): void {
     const instance = EnclosureHttp.axiosInstance;
     instance.interceptors.response.use(
       (response: EnclosureHttpResoponse) => {
+        const $config = response.config;
         // 请求每次成功一次就删除当前canceltoken标记
-        const cancelKey = EnclosureHttp.genUniqueKey(response.config);
+        const cancelKey = EnclosureHttp.genUniqueKey($config);
         this.deleteCancelTokenByCancelKey(cancelKey);
+
+        NProgress.done();
         // 优先判断post/get等方法是否传入回掉，否则执行初始化设置等回掉
-        if (typeof this.beforeResponseCallback === "function") {
-          this.beforeResponseCallback(response);
-          this.beforeResponseCallback = undefined;
+        if (typeof $config.beforeResponseCallback === "function") {
+          $config.beforeResponseCallback(response);
           return response.data;
         }
         if (EnclosureHttp.initConfig.beforeResponseCallback) {
           EnclosureHttp.initConfig.beforeResponseCallback(response);
           return response.data;
         }
-        NProgress.done();
         return response.data;
       },
       (error: EnclosureHttpError) => {
@@ -191,6 +185,7 @@ class EnclosureHttp {
           }
         }
         $error.isCancelRequest = Axios.isCancel($error);
+        NProgress.done();
         // 所有的响应异常 区分来源为取消请求/非取消请求
         return Promise.reject($error);
       }
@@ -209,16 +204,10 @@ class EnclosureHttp {
       ...axiosConfig
     } as EnclosureHttpRequestConfig);
     // 单独处理自定义请求/响应回掉
-    if (axiosConfig?.beforeRequestCallback) {
-      this.beforeRequestCallback = axiosConfig.beforeRequestCallback;
-    }
-    if (axiosConfig?.beforeResponseCallback) {
-      this.beforeResponseCallback = axiosConfig.beforeResponseCallback;
-    }
     return new Promise((resolve, reject) => {
       EnclosureHttp.axiosInstance
         .request(config)
-        .then((response: EnclosureHttpResoponse) => {
+        .then((response: undefined) => {
           resolve(response);
         })
         .catch((error: any) => {
